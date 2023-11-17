@@ -1,7 +1,7 @@
 import os
 import openai
 
-def fix_script(script_file):
+def fix_script(script_content):
     # Read the example scripts
     with open(os.path.join(".", "unmodified_example.cs"), "r") as file:
         original_script = file.read()
@@ -9,7 +9,6 @@ def fix_script(script_file):
         modified_script = file.read()
 
   
-    script_to_be_modified = script_file.read()
 
             # Prepare the prompt for ChatGPT
     prompt = [
@@ -27,7 +26,7 @@ def fix_script(script_file):
         },
         {
             "role": "user",
-            "content": f"Script to be Modified: csharp\n{script_to_be_modified}",
+            "content": f"Script to be Modified: csharp\n{script_content}",
         },
     ]
 
@@ -42,12 +41,7 @@ def fix_script(script_file):
     
 
 
-def modify_scripts(directory, openai_api_key):
-    # Set the OpenAI API key
-    openai.api_key = openai_api_key
-    client = openai.ChatCompletion()
-    
-    
+def modify_scripts(directory): 
 
     # Traverse the directory
     for root, dirs, files in os.walk(directory):
@@ -57,18 +51,28 @@ def modify_scripts(directory, openai_api_key):
                 file_path = os.path.join(root, file)
                 with open(file_path, "r") as script_file:
                     
+                    content=script_file.read()        
+                            
+                            
                     #if there is not Odin Inspector in the script, skip it
-                    if "OdinInspector" not in script_file.read():
+                    if "OdinInspector" not in content:
+                        print(f"Skipped {file_path}")
+                        #close the file
+                        script_file.close()
                         continue
-
+                    
+            
                     # Fix the script
-                    modified=fix_script(script_file)
+                    modified=fix_script(content)
                 
                     # Write the modified script to the file
                     with open(file_path, "w") as script_file:
                         script_file.write(modified)
-        
-
+                    
+                    # Close the file
+                    script_file.close()
+                    print(f"Modified {file_path}")
+    
 
 # Usage
 # Get api key from api_key.txt
@@ -77,10 +81,9 @@ openai.api_key = api_key
 client = openai.ChatCompletion()
 client.api_key = api_key
 
+# with open(os.path.join(".", "sample.cs"), "r") as file:
+#     fix_script(file)
 
-with open(os.path.join(".", "sample.cs"), "r") as file:
-    fix_script(file)
+directory_to_scan = "../Packages/com.reboot.core/Scripts"
 
-# directory_to_scan = "../Packages/com.reboot.core/Scripts"
-
-# modify_scripts(directory_to_scan, openai_api_key)
+modify_scripts(directory_to_scan)
